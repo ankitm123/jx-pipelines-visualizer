@@ -87,14 +87,14 @@ In the Git repository for your dev environment:
     annotations:
       kubernetes.io/ingress.class: nginx
   ```
-  
+
   This will expose the UI at `pipelines.your.domain.tld` - without any auth. You can add [basic auth by appending a few additional annotations](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#authentication) - re-using the Jenkins X Auth Secret:
 
   ```
   nginx.ingress.kubernetes.io/auth-type: basic
   nginx.ingress.kubernetes.io/auth-secret: jx-basic-auth
   ```
-  
+
 - If you want [Lighthouse](https://github.com/jenkins-x/lighthouse) to add links to your jx-pipelines-visualizer instance from your Pull/Merge Request checks, update the `env/lighthouse-jx/values.tmpl.yaml` file and add the following:
   ```
   env:
@@ -115,6 +115,69 @@ $ helm repo add jx https://jenkins-x-charts.github.io/repo
 $ helm repo update
 $ helm install --name jx-pipelines-visualizer jx/jx-pipelines-visualizer
 ```
+
+### With the Gateway API (instead of an Ingress)
+
+As an alternative to the Ingress resource, the chart can expose the UI through the
+Kubernetes [Gateway API](https://gateway-api.sigs.k8s.io/) by creating an `HTTPRoute`.
+Enable it via the `gatewayApi` values block:
+
+```yaml
+gatewayApi:
+  enabled: true
+  # the (pre-existing) Gateway to attach to
+  parentRef:
+    name: envoy-gateway
+    namespace: envoy-gateway-system
+    sectionName: https
+  hosts:
+    - pipelines.example.com
+  # optional basic auth (Envoy Gateway only)
+  basicAuth:
+    enabled: false
+    kind: envoy
+    authData: "" # base64-encoded htpasswd content
+```
+
+`rules` maps directly to the `HTTPRoute` `spec.rules` list, so any Gateway API rule
+field is supported (`matches`, `filters`, `backendRefs`, `timeouts`, ...). It defaults
+to a single `PathPrefix: /` rule routing to this chart's Service. String values are
+processed with Helm `tpl`, and a rule that omits `backendRefs` falls back to the chart's
+own Service on `service.port`. Override it to add multiple rules, custom matches or
+filters:
+
+```yaml
+gatewayApi:
+  enabled: true
+  hosts:
+    - pipelines.example.com
+  rules:
+    # route /badge to the chart Service (backendRefs defaulted)
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /badge
+    # everything else, with an explicit backend
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: '{{ include "jxpipelines.fullname" . }}'
+          port: 80
+```
+
+Prerequisites and notes:
+- The Gateway API CRDs (`gateway.networking.k8s.io/v1`) must be installed in the cluster.
+- The `HTTPRoute` attaches to a **pre-existing** Gateway referenced by `parentRef`
+  (the chart does not create the Gateway). That Gateway owns TLS termination and must
+  allow routes from this namespace (`allowedRoutes`; a `ReferenceGrant` is needed if it
+  lives in another namespace, set via `parentRef.namespace`).
+- Basic auth is implemented with an [Envoy Gateway](https://gateway.envoyproxy.io/)
+  `SecurityPolicy` (`gateway.envoyproxy.io/v1alpha1`), so `basicAuth.kind: envoy`
+  requires Envoy Gateway as the controller.
+- `gatewayApi.enabled` and `ingress.enabled` can be set independently (e.g. during a
+  migration).
 
 ## Usage
 
