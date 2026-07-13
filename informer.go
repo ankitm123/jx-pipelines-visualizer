@@ -79,7 +79,7 @@ func (i *Informer) indexPipelineActivity(pa *jenkinsv1.PipelineActivity, operati
 		i.Logger.WithField("PipelineActivity", pa.Name).Debugf("%sing new PipelineActivity", strings.Title(operation))
 	}
 	p := PipelineFromPipelineActivity(pa)
-	err := i.Store.Add(p)
+	err := i.Store.Add(&p)
 	if err != nil && i.Logger != nil {
 		i.Logger.WithError(err).WithField("PipelineActivity", pa.Name).Errorf("failed to %s new PipelineActivity", operation)
 	}
