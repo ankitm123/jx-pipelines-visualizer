@@ -12,7 +12,7 @@ require (
 	github.com/rs/xid v1.6.0
 	github.com/sirupsen/logrus v1.9.4
 	github.com/subchord/go-sse v1.0.7
-	github.com/tektoncd/pipeline v1.14.0
+	github.com/tektoncd/pipeline v1.13.1
 	github.com/unrolled/render v1.7.0
 	github.com/urfave/negroni/v2 v2.0.2
 	golang.org/x/text v0.40.0
