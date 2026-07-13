@@ -38,7 +38,7 @@ type Router struct {
 	render                          *render.Render
 }
 
-func (r Router) Handler() (http.Handler, error) {
+func (r *Router) Handler() (http.Handler, error) {
 	kClient, err := kubernetes.NewForConfig(r.KConfig)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (r Router) Handler() (http.Handler, error) {
 	}
 
 	var archivedLogsURLTemplate *template.Template
-	if len(r.ArchivedLogsURLTemplate) > 0 {
+	if r.ArchivedLogsURLTemplate != "" {
 		archivedLogsURLTemplate, err = template.New("archivedLogsURL").Funcs(sprig.TxtFuncMap()).Parse(r.ArchivedLogsURLTemplate)
 		if err != nil {
 			return nil, err
@@ -61,7 +61,7 @@ func (r Router) Handler() (http.Handler, error) {
 	}
 
 	var archivedPipelinesURLTemplate *template.Template
-	if len(r.ArchivedPipelinesURLTemplate) > 0 {
+	if r.ArchivedPipelinesURLTemplate != "" {
 		archivedPipelinesURLTemplate, err = template.New("archivedPipelinesURL").Funcs(sprig.TxtFuncMap()).Parse(r.ArchivedPipelinesURLTemplate)
 		if err != nil {
 			return nil, err
@@ -69,7 +69,7 @@ func (r Router) Handler() (http.Handler, error) {
 	}
 
 	var archivedPipelineRunsURLTemplate *template.Template
-	if len(r.ArchivedPipelineRunsURLTemplate) > 0 {
+	if r.ArchivedPipelineRunsURLTemplate != "" {
 		archivedPipelineRunsURLTemplate, err = template.New("archivedPipelineRunsURL").Funcs(sprig.TxtFuncMap()).Parse(r.ArchivedPipelineRunsURLTemplate)
 		if err != nil {
 			return nil, err
@@ -77,7 +77,7 @@ func (r Router) Handler() (http.Handler, error) {
 	}
 
 	var pipelineTraceURLTemplate *template.Template
-	if len(r.PipelineTraceURLTemplate) > 0 {
+	if r.PipelineTraceURLTemplate != "" {
 		pipelineTraceURLTemplate, err = template.New("pipelineTraceURL").Funcs(sprig.TxtFuncMap()).Parse(r.PipelineTraceURLTemplate)
 		if err != nil {
 			return nil, err
@@ -90,7 +90,7 @@ func (r Router) Handler() (http.Handler, error) {
 		IsDevelopment: version.Version == "dev",
 		Funcs: []htmltemplate.FuncMap{
 			sprig.HtmlFuncMap(),
-			htmltemplate.FuncMap{
+			{
 				"pipelinePreviewEnvironmentApplicationURL": functions.PipelinePreviewEnvironmentApplicationURL,
 				"traceURL":           functions.TraceURLFunc(pipelineTraceURLTemplate),
 				"repositoryURL":      functions.RepositoryURL,
@@ -268,7 +268,7 @@ func jxuiCompatibilityHandler(namespace string) http.Handler {
 }
 
 func healthzHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 }

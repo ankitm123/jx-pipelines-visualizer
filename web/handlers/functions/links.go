@@ -19,9 +19,9 @@ func TraceURLFunc(pipelineTraceURLTemplate *template.Template) func(string) stri
 func RepositoryURL(pipeline interface{}) string {
 	switch p := pipeline.(type) {
 	case visualizer.Pipeline:
-		return repositoryURLForPipeline(p)
+		return repositoryURLForPipeline(&p)
 	case visualizer.RunningPipeline:
-		return repositoryURLForPipeline(p.Pipeline)
+		return repositoryURLForPipeline(&p.Pipeline)
 	case *jenkinsv1.PipelineActivity:
 		return repositoryURLForPipelineActivity(p)
 	default:
@@ -67,9 +67,9 @@ func CommitURL(pipeline interface{}) string {
 func AuthorURL(pipeline interface{}) string {
 	switch p := pipeline.(type) {
 	case visualizer.Pipeline:
-		return authorURLForPipeline(p)
+		return authorURLForPipeline(&p)
 	case visualizer.RunningPipeline:
-		return authorURLForPipeline(p.Pipeline)
+		return authorURLForPipeline(&p.Pipeline)
 	case *jenkinsv1.PipelineActivity:
 		return authorURLForPipelineActivity(p)
 	default:
@@ -77,7 +77,7 @@ func AuthorURL(pipeline interface{}) string {
 	}
 }
 
-func authorURLForPipeline(pipeline visualizer.Pipeline) string {
+func authorURLForPipeline(pipeline *visualizer.Pipeline) string {
 	switch pipeline.Provider {
 	case "github":
 		return fmt.Sprintf("https://github.com/%s", pipeline.Author)
@@ -103,7 +103,7 @@ func authorURLForPipelineActivity(pa *jenkinsv1.PipelineActivity) string {
 	}
 }
 
-func repositoryURLForPipeline(pipeline visualizer.Pipeline) string {
+func repositoryURLForPipeline(pipeline *visualizer.Pipeline) string {
 	if pipeline.GitUrl != "" {
 		return pipeline.GitUrl
 	}
@@ -133,7 +133,7 @@ func repositoryURLForPipelineActivity(pa *jenkinsv1.PipelineActivity) string {
 	}
 }
 
-func pullRequestURLForPipeline(pipeline visualizer.Pipeline) string {
+func pullRequestURLForPipeline(pipeline *visualizer.Pipeline) string {
 	if pipeline.PullRequestNumber() == "" {
 		return "" // not a PR
 	}
@@ -176,7 +176,7 @@ func pullRequestURLForPipelineActivity(pa *jenkinsv1.PipelineActivity) string {
 
 func branchURLForPipeline(pipeline visualizer.Pipeline) string {
 	if pipeline.PullRequestNumber() != "" {
-		return pullRequestURLForPipeline(pipeline)
+		return pullRequestURLForPipeline(&pipeline)
 	}
 	switch pipeline.Provider {
 	case "github":
@@ -207,7 +207,7 @@ func branchURLForPipelineActivity(pa *jenkinsv1.PipelineActivity) string {
 }
 
 func commitURLForPipelineActivity(pa *jenkinsv1.PipelineActivity) string {
-	if len(pa.Spec.LastCommitURL) > 0 {
+	if pa.Spec.LastCommitURL != "" {
 		return pa.Spec.LastCommitURL
 	}
 	switch pipelineActivityProvider(pa) {

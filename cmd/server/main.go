@@ -5,9 +5,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	v1 "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/typed/jenkins.io/v1"
 	"net/http"
 	"time"
+
+	v1 "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/typed/jenkins.io/v1"
 
 	visualizer "github.com/jenkins-x/jx-pipelines-visualizer"
 	"github.com/jenkins-x/jx-pipelines-visualizer/internal/kube"

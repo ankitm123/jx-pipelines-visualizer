@@ -38,7 +38,7 @@ func NewStore() (*Store, error) {
 	return store, nil
 }
 
-func (s *Store) Add(p Pipeline) error {
+func (s *Store) Add(p *Pipeline) error {
 	return s.Index.Index(p.Name, p)
 }
 
@@ -95,25 +95,25 @@ func (s *Store) Query(q Query) (*Pipelines, error) {
 
 func (q Query) ToBleveQuery() query.Query {
 	var queryString strings.Builder
-	if len(q.Query) > 0 {
+	if q.Query != "" {
 		queryString.WriteString("+")
 		queryString.WriteString(q.Query)
 	}
-	if len(q.Owner) > 0 {
+	if q.Query != "" {
 		if queryString.Len() > 0 {
 			queryString.WriteString(" ")
 		}
 		queryString.WriteString("+Owner:")
 		queryString.WriteString(q.Owner)
 	}
-	if len(q.Repository) > 0 {
+	if q.Repository != "" {
 		if queryString.Len() > 0 {
 			queryString.WriteString(" ")
 		}
 		queryString.WriteString("+Repository:")
 		queryString.WriteString(q.Repository)
 	}
-	if len(q.Branch) > 0 {
+	if q.Branch != "" {
 		if queryString.Len() > 0 {
 			queryString.WriteString(" ")
 		}
@@ -171,7 +171,7 @@ func bleveDocToPipeline(doc *search.DocumentMatch) Pipeline {
 		Provider:        doc.Fields["Provider"].(string),
 		Owner:           doc.Fields["Owner"].(string),
 		Repository:      doc.Fields["Repository"].(string),
-		Branch:          doc.Fields["Branch"].(string),
+		Branch:          doc.Fields["Branch"].(*string),
 		Build:           doc.Fields["Build"].(string),
 		Context:         doc.Fields["Context"].(string),
 		Author:          doc.Fields["Author"].(string),

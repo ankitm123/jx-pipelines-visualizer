@@ -15,7 +15,7 @@ type RunningHandler struct {
 	Logger           *logrus.Logger
 }
 
-func (h *RunningHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *RunningHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	err := h.Render.HTML(w, http.StatusOK, "running", struct {
 		Pipelines []visualizer.RunningPipeline
 	}{

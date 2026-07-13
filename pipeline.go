@@ -13,7 +13,7 @@ type Pipeline struct {
 	Provider        string
 	Owner           string
 	Repository      string
-	Branch          string
+	Branch          *string
 	Build           string
 	Context         string
 	Author          string
@@ -24,12 +24,12 @@ type Pipeline struct {
 	Start           time.Time
 	End             time.Time
 	Duration        time.Duration
-	GitUrl          string
+	GitURL          string
 }
 
 func (p Pipeline) PullRequestNumber() string {
-	if strings.HasPrefix(p.Branch, "PR-") {
-		return strings.TrimPrefix(p.Branch, "PR-")
+	if strings.HasPrefix(*p.Branch, "PR-") {
+		return strings.TrimPrefix(*p.Branch, "PR-")
 	}
 	return ""
 }
@@ -40,7 +40,7 @@ func PipelineFromPipelineActivity(pa *jenkinsv1.PipelineActivity) Pipeline {
 		Provider:        pa.Labels["provider"],
 		Owner:           pa.Spec.GitOwner,
 		Repository:      pa.Spec.GitRepository,
-		Branch:          pa.Spec.GitBranch,
+		Branch:          &pa.Spec.GitBranch,
 		Build:           pa.Spec.Build,
 		Context:         getContext(pa),
 		Author:          pa.Spec.Author,
@@ -49,7 +49,7 @@ func PipelineFromPipelineActivity(pa *jenkinsv1.PipelineActivity) Pipeline {
 		Status:          string(pa.Spec.Status),
 		Description:     pa.Annotations["description"],
 		Namespace:       pa.Namespace,
-		GitUrl:          strings.TrimSuffix(pa.Spec.GitURL, ".git"),
+		GitURL:          strings.TrimSuffix(pa.Spec.GitURL, ".git"),
 	}
 	if pa.Spec.StartedTimestamp != nil {
 		p.Start = pa.Spec.StartedTimestamp.Time
