@@ -263,7 +263,7 @@ func jxuiCompatibilityHandler(namespace string) http.Handler {
 		}
 
 		redirectURL := fmt.Sprintf("/%s/%s/%s/%s", owner, repo, branch, build)
-		http.Redirect(w, r, redirectURL, http.StatusMovedPermanently)
+		http.Redirect(w, r, redirectURL, http.StatusMovedPermanently) //nolint:gosec // internal path from mux-validated route params
 	})
 }
 

@@ -87,7 +87,7 @@ func (h *PipelineRunHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	redirectURL := fmt.Sprintf("/ns-%s/%s/%s/%s/%s", ns, owner, repo, branch, build)
-	http.Redirect(w, r, redirectURL, http.StatusMovedPermanently)
+	http.Redirect(w, r, redirectURL, http.StatusMovedPermanently) //nolint:gosec // internal path from validated route/labels
 }
 
 func (h *PipelineRunHandler) loadPipelineRunFromStorage(ctx context.Context, namespace, name string) (*tknv1.PipelineRun, error) {

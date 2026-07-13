@@ -51,9 +51,9 @@ func (pipelines *RunningPipelines) Add(pa *jenkinsv1.PipelineActivity) {
 	if len(runnings) == 0 {
 		if pa.Spec.Status.IsTerminated() {
 			return
-		} else {
+		} else { //nolint:revive // clearer as symmetric if/else
 			runnings = RunningPipelinesFromPipelineActivity(pa)
-			for _, running := range runnings {
+			for _, running := range runnings { //nolint:gocritic // small slice, cold path
 				pipelines.running.Store(running.String(), running)
 				pipelines.onRunningPipelineAdded(&running)
 			}
@@ -62,7 +62,7 @@ func (pipelines *RunningPipelines) Add(pa *jenkinsv1.PipelineActivity) {
 	}
 
 	if pa.Spec.Status.IsTerminated() {
-		for _, running := range runnings {
+		for _, running := range runnings { //nolint:gocritic // small slice, cold path
 			pipelines.running.Delete(running.String())
 			pipelines.onRunningPipelineDeleted(&running)
 		}
@@ -70,7 +70,7 @@ func (pipelines *RunningPipelines) Add(pa *jenkinsv1.PipelineActivity) {
 	}
 
 	// delete runnings which are finished
-	for _, running := range runnings {
+	for _, running := range runnings { //nolint:gocritic // small slice, cold path
 		for _, stage := range pa.Spec.Steps {
 			if stage.Stage != nil && stage.Stage.Name == running.Stage {
 				for _, step := range stage.Stage.Steps {
@@ -86,9 +86,9 @@ func (pipelines *RunningPipelines) Add(pa *jenkinsv1.PipelineActivity) {
 	}
 
 	currentlyRunnings := RunningPipelinesFromPipelineActivity(pa)
-	for _, currentlyRunning := range currentlyRunnings {
+	for _, currentlyRunning := range currentlyRunnings { //nolint:gocritic // small slice, cold path
 		var alreadyRunning bool
-		for _, running := range runnings {
+		for _, running := range runnings { //nolint:gocritic // small slice, cold path
 			if running.String() == currentlyRunning.String() {
 				alreadyRunning = true
 				break
@@ -142,7 +142,7 @@ func (pipelines *RunningPipelines) onRunningPipelineAdded(running *RunningPipeli
 }
 
 func (pipelines *RunningPipelines) onRunningPipelineDeleted(running *RunningPipeline) {
-	pipelines.watchers.Range(func(key, value interface{}) bool {
+	pipelines.watchers.Range(func(_, value interface{}) bool {
 		if watcher, ok := value.(Watcher); ok {
 			go func() {
 				defer func() {

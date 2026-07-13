@@ -95,7 +95,7 @@ func main() {
 		Logger:           logger,
 	}).Start(ctx)
 
-	handler, err := handlers.Router{
+	handler, err := (&handlers.Router{
 		Store:            store,
 		RunningPipelines: runningPipelines,
 		KConfig:          kClient.Config,
@@ -109,14 +109,18 @@ func main() {
 		ArchivedPipelineRunsURLTemplate: options.archivedPipelineRunsURLTemplate,
 		PipelineTraceURLTemplate:        options.pipelineTraceURLTemplate,
 		Logger:                          logger,
-	}.Handler()
+	}).Handler()
 	if err != nil {
 		logger.WithError(err).Fatal("failed to initialize the HTTP handler")
 	}
 	http.Handle("/", handler)
 
 	logger.WithField("listenAddr", options.listenAddr).Info("Starting HTTP Server")
-	err = http.ListenAndServe(options.listenAddr, nil)
+	server := &http.Server{
+		Addr:              options.listenAddr,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+	err = server.ListenAndServe()
 	if !errors.Is(err, http.ErrServerClosed) {
 		logger.WithError(err).Fatal("failed to start HTTP server")
 	}

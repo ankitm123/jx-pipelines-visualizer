@@ -9,6 +9,8 @@ import (
 	jxclientset "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
 	informers "github.com/jenkins-x/jx-api/v4/pkg/client/informers/externalversions"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -28,7 +30,7 @@ func (i *Informer) Start(ctx context.Context) {
 		informers.WithNamespace(i.Namespace),
 	)
 
-	informerFactory.Jenkins().V1().PipelineActivities().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	if _, err := informerFactory.Jenkins().V1().PipelineActivities().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			pa, ok := obj.(*jenkinsv1.PipelineActivity)
 			if !ok {
@@ -38,8 +40,8 @@ func (i *Informer) Start(ctx context.Context) {
 			i.indexPipelineActivity(pa, "index")
 			i.RunningPipelines.Add(pa)
 		},
-		UpdateFunc: func(old, new interface{}) {
-			pa, ok := new.(*jenkinsv1.PipelineActivity)
+		UpdateFunc: func(_, updated interface{}) {
+			pa, ok := updated.(*jenkinsv1.PipelineActivity)
 			if !ok {
 				return
 			}
@@ -62,7 +64,9 @@ func (i *Informer) Start(ctx context.Context) {
 			}
 			i.RunningPipelines.Add(pa)
 		},
-	})
+	}); err != nil && i.Logger != nil {
+		i.Logger.WithError(err).Error("failed to register PipelineActivity event handler")
+	}
 
 	informerFactory.Start(ctx.Done())
 }
@@ -76,7 +80,7 @@ func (i *Informer) indexPipelineActivity(pa *jenkinsv1.PipelineActivity, operati
 	}
 
 	if i.Logger != nil && i.Logger.IsLevelEnabled(logrus.DebugLevel) {
-		i.Logger.WithField("PipelineActivity", pa.Name).Debugf("%sing new PipelineActivity", strings.Title(operation))
+		i.Logger.WithField("PipelineActivity", pa.Name).Debugf("%sing new PipelineActivity", cases.Title(language.English).String(operation))
 	}
 	p := PipelineFromPipelineActivity(pa)
 	err := i.Store.Add(&p)

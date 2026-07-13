@@ -32,9 +32,9 @@ func RepositoryURL(pipeline interface{}) string {
 func PullRequestURL(pipeline interface{}) string {
 	switch p := pipeline.(type) {
 	case visualizer.Pipeline:
-		return pullRequestURLForPipeline(p)
+		return pullRequestURLForPipeline(&p)
 	case visualizer.RunningPipeline:
-		return pullRequestURLForPipeline(p.Pipeline)
+		return pullRequestURLForPipeline(&p.Pipeline)
 	case *jenkinsv1.PipelineActivity:
 		return pullRequestURLForPipelineActivity(p)
 	default:
@@ -45,9 +45,9 @@ func PullRequestURL(pipeline interface{}) string {
 func BranchURL(pipeline interface{}) string {
 	switch p := pipeline.(type) {
 	case visualizer.Pipeline:
-		return branchURLForPipeline(p)
+		return branchURLForPipeline(&p)
 	case visualizer.RunningPipeline:
-		return branchURLForPipeline(p.Pipeline)
+		return branchURLForPipeline(&p.Pipeline)
 	case *jenkinsv1.PipelineActivity:
 		return branchURLForPipelineActivity(p)
 	default:
@@ -104,8 +104,8 @@ func authorURLForPipelineActivity(pa *jenkinsv1.PipelineActivity) string {
 }
 
 func repositoryURLForPipeline(pipeline *visualizer.Pipeline) string {
-	if pipeline.GitUrl != "" {
-		return pipeline.GitUrl
+	if pipeline.GitURL != "" {
+		return pipeline.GitURL
 	}
 
 	switch pipeline.Provider {
@@ -141,14 +141,14 @@ func pullRequestURLForPipeline(pipeline *visualizer.Pipeline) string {
 	case "github":
 		return fmt.Sprintf("https://github.com/%s/%s/pull/%s", pipeline.Owner, pipeline.Repository, pipeline.PullRequestNumber())
 	case "gitlab":
-		if pipeline.GitUrl != "" {
-			return fmt.Sprintf("%s/%s/%s/-/merge_requests/%s", pipeline.GitUrl, pipeline.Owner, pipeline.Repository, pipeline.PullRequestNumber())
+		if pipeline.GitURL != "" {
+			return fmt.Sprintf("%s/%s/%s/-/merge_requests/%s", pipeline.GitURL, pipeline.Owner, pipeline.Repository, pipeline.PullRequestNumber())
 		}
 
 		return fmt.Sprintf("https://gitlab.com/%s/%s/-/merge_requests/%s", pipeline.Owner, pipeline.Repository, pipeline.PullRequestNumber())
 	case "bitbucket":
-		if pipeline.GitUrl != "" {
-			return fmt.Sprintf("%s/%s/%s/pull-requests/%s", pipeline.GitUrl, pipeline.Owner, pipeline.Repository, pipeline.PullRequestNumber())
+		if pipeline.GitURL != "" {
+			return fmt.Sprintf("%s/%s/%s/pull-requests/%s", pipeline.GitURL, pipeline.Owner, pipeline.Repository, pipeline.PullRequestNumber())
 		}
 
 		return fmt.Sprintf("https://bitbucket.org/%s/%s/pull-requests/%s", pipeline.Owner, pipeline.Repository, pipeline.PullRequestNumber())
@@ -174,9 +174,9 @@ func pullRequestURLForPipelineActivity(pa *jenkinsv1.PipelineActivity) string {
 	}
 }
 
-func branchURLForPipeline(pipeline visualizer.Pipeline) string {
+func branchURLForPipeline(pipeline *visualizer.Pipeline) string {
 	if pipeline.PullRequestNumber() != "" {
-		return pullRequestURLForPipeline(&pipeline)
+		return pullRequestURLForPipeline(pipeline)
 	}
 	switch pipeline.Provider {
 	case "github":
