@@ -3,9 +3,10 @@ package handlers
 import (
 	"context"
 	"fmt"
-	jenkinsv1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"net/http"
 	"strings"
+
+	jenkinsv1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 
 	"github.com/gorilla/mux"
 	"github.com/jenkins-x-plugins/jx-pipeline/pkg/tektonlog"
@@ -135,7 +136,7 @@ func (h *LiveLogsHandler) send(ctx context.Context, clientConnection *sse.Client
 	}
 }
 
-func (h *LiveLogsHandler) getPipelineRuns(ctx context.Context, owner, repo, branch, build string, namespace string, extraSelectors ...string) ([]*tknv1.PipelineRun, string, error) {
+func (h *LiveLogsHandler) getPipelineRuns(ctx context.Context, owner, repo, branch, build, namespace string, extraSelectors ...string) ([]*tknv1.PipelineRun, string, error) {
 	var extraLabelSet labels.Set
 	for _, extraSelector := range extraSelectors {
 		labelSet, err := labels.ConvertSelectorToLabelsMap(extraSelector)

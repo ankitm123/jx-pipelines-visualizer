@@ -24,10 +24,10 @@ type Pipeline struct {
 	Start           time.Time
 	End             time.Time
 	Duration        time.Duration
-	GitUrl          string
+	GitURL          string
 }
 
-func (p Pipeline) PullRequestNumber() string {
+func (p *Pipeline) PullRequestNumber() string {
 	if strings.HasPrefix(p.Branch, "PR-") {
 		return strings.TrimPrefix(p.Branch, "PR-")
 	}
@@ -49,7 +49,7 @@ func PipelineFromPipelineActivity(pa *jenkinsv1.PipelineActivity) Pipeline {
 		Status:          string(pa.Spec.Status),
 		Description:     pa.Annotations["description"],
 		Namespace:       pa.Namespace,
-		GitUrl:          strings.TrimSuffix(pa.Spec.GitURL, ".git"),
+		GitURL:          strings.TrimSuffix(pa.Spec.GitURL, ".git"),
 	}
 	if pa.Spec.StartedTimestamp != nil {
 		p.Start = pa.Spec.StartedTimestamp.Time

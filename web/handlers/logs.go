@@ -51,14 +51,14 @@ func (h *LogsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if pa != nil {
 		buildLogsURL = pa.Spec.BuildLogsURL
 	}
-	if len(buildLogsURL) == 0 {
+	if buildLogsURL == "" {
 		buildLogsURL, err = h.buildLogsURL(owner, repo, branch, build)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
-	if len(buildLogsURL) == 0 {
+	if buildLogsURL == "" {
 		http.NotFound(w, r)
 		return
 	}

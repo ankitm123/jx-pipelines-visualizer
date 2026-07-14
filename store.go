@@ -38,7 +38,7 @@ func NewStore() (*Store, error) {
 	return store, nil
 }
 
-func (s *Store) Add(p Pipeline) error {
+func (s *Store) Add(p *Pipeline) error {
 	return s.Index.Index(p.Name, p)
 }
 
@@ -95,25 +95,25 @@ func (s *Store) Query(q Query) (*Pipelines, error) {
 
 func (q Query) ToBleveQuery() query.Query {
 	var queryString strings.Builder
-	if len(q.Query) > 0 {
+	if q.Query != "" {
 		queryString.WriteString("+")
 		queryString.WriteString(q.Query)
 	}
-	if len(q.Owner) > 0 {
+	if q.Query != "" {
 		if queryString.Len() > 0 {
 			queryString.WriteString(" ")
 		}
 		queryString.WriteString("+Owner:")
 		queryString.WriteString(q.Owner)
 	}
-	if len(q.Repository) > 0 {
+	if q.Repository != "" {
 		if queryString.Len() > 0 {
 			queryString.WriteString(" ")
 		}
 		queryString.WriteString("+Repository:")
 		queryString.WriteString(q.Repository)
 	}
-	if len(q.Branch) > 0 {
+	if q.Branch != "" {
 		if queryString.Len() > 0 {
 			queryString.WriteString(" ")
 		}
@@ -179,7 +179,7 @@ func bleveDocToPipeline(doc *search.DocumentMatch) Pipeline {
 		Commit:          doc.Fields["Commit"].(string),
 		Status:          doc.Fields["Status"].(string),
 		Description:     doc.Fields["Description"].(string),
-		GitUrl:          doc.Fields["GitUrl"].(string),
+		GitURL:          doc.Fields["GitUrl"].(string),
 		Start:           startDate,
 		End:             endDate,
 		Duration:        time.Duration(doc.Fields["Duration"].(float64)),

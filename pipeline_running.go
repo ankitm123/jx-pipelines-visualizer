@@ -18,11 +18,11 @@ type RunningPipeline struct {
 	StepStartTime  time.Time
 }
 
-func (running RunningPipeline) String() string {
+func (running *RunningPipeline) String() string {
 	return fmt.Sprintf("%s/%s/%s", running.Name, running.Stage, running.Step)
 }
 
-func (running RunningPipeline) JSON() string {
+func (running *RunningPipeline) JSON() string {
 	data, err := json.Marshal(running)
 	if err != nil {
 		return ""
@@ -51,33 +51,33 @@ func (pipelines *RunningPipelines) Add(pa *jenkinsv1.PipelineActivity) {
 	if len(runnings) == 0 {
 		if pa.Spec.Status.IsTerminated() {
 			return
-		} else {
+		} else { //nolint:revive // clearer as symmetric if/else
 			runnings = RunningPipelinesFromPipelineActivity(pa)
-			for _, running := range runnings {
+			for _, running := range runnings { //nolint:gocritic // small slice, cold path
 				pipelines.running.Store(running.String(), running)
-				pipelines.onRunningPipelineAdded(running)
+				pipelines.onRunningPipelineAdded(&running)
 			}
 			return
 		}
 	}
 
 	if pa.Spec.Status.IsTerminated() {
-		for _, running := range runnings {
+		for _, running := range runnings { //nolint:gocritic // small slice, cold path
 			pipelines.running.Delete(running.String())
-			pipelines.onRunningPipelineDeleted(running)
+			pipelines.onRunningPipelineDeleted(&running)
 		}
 		return
 	}
 
 	// delete runnings which are finished
-	for _, running := range runnings {
+	for _, running := range runnings { //nolint:gocritic // small slice, cold path
 		for _, stage := range pa.Spec.Steps {
 			if stage.Stage != nil && stage.Stage.Name == running.Stage {
 				for _, step := range stage.Stage.Steps {
 					if step.Name == running.Step {
 						if step.Status.IsTerminated() {
 							pipelines.running.Delete(running.String())
-							pipelines.onRunningPipelineDeleted(running)
+							pipelines.onRunningPipelineDeleted(&running)
 						}
 					}
 				}
@@ -86,9 +86,9 @@ func (pipelines *RunningPipelines) Add(pa *jenkinsv1.PipelineActivity) {
 	}
 
 	currentlyRunnings := RunningPipelinesFromPipelineActivity(pa)
-	for _, currentlyRunning := range currentlyRunnings {
+	for _, currentlyRunning := range currentlyRunnings { //nolint:gocritic // small slice, cold path
 		var alreadyRunning bool
-		for _, running := range runnings {
+		for _, running := range runnings { //nolint:gocritic // small slice, cold path
 			if running.String() == currentlyRunning.String() {
 				alreadyRunning = true
 				break
@@ -96,14 +96,14 @@ func (pipelines *RunningPipelines) Add(pa *jenkinsv1.PipelineActivity) {
 		}
 		if !alreadyRunning {
 			pipelines.running.Store(currentlyRunning.String(), currentlyRunning)
-			pipelines.onRunningPipelineAdded(currentlyRunning)
+			pipelines.onRunningPipelineAdded(&currentlyRunning)
 		}
 	}
 }
 
 func (pipelines *RunningPipelines) Get() []RunningPipeline {
 	var runnings []RunningPipeline
-	pipelines.running.Range(func(key, value interface{}) bool {
+	pipelines.running.Range(func(_, value interface{}) bool {
 		if running, ok := value.(RunningPipeline); ok {
 			runnings = append(runnings, running)
 		}
@@ -114,7 +114,7 @@ func (pipelines *RunningPipelines) Get() []RunningPipeline {
 
 func (pipelines *RunningPipelines) getForActivity(pa *jenkinsv1.PipelineActivity) []RunningPipeline {
 	var runnings []RunningPipeline
-	pipelines.running.Range(func(key, value interface{}) bool {
+	pipelines.running.Range(func(_, value interface{}) bool {
 		if running, ok := value.(RunningPipeline); ok {
 			if running.Name == pa.Name {
 				runnings = append(runnings, running)
@@ -125,8 +125,8 @@ func (pipelines *RunningPipelines) getForActivity(pa *jenkinsv1.PipelineActivity
 	return runnings
 }
 
-func (pipelines *RunningPipelines) onRunningPipelineAdded(running RunningPipeline) {
-	pipelines.watchers.Range(func(key, value interface{}) bool {
+func (pipelines *RunningPipelines) onRunningPipelineAdded(running *RunningPipeline) {
+	pipelines.watchers.Range(func(_, value interface{}) bool {
 		if watcher, ok := value.(Watcher); ok {
 			go func() {
 				defer func() {
@@ -134,15 +134,15 @@ func (pipelines *RunningPipelines) onRunningPipelineAdded(running RunningPipelin
 						pipelines.Logger.WithField("msg", r).Error("Panic when writing to channel")
 					}
 				}()
-				watcher.Added <- running
+				watcher.Added <- *running
 			}()
 		}
 		return true
 	})
 }
 
-func (pipelines *RunningPipelines) onRunningPipelineDeleted(running RunningPipeline) {
-	pipelines.watchers.Range(func(key, value interface{}) bool {
+func (pipelines *RunningPipelines) onRunningPipelineDeleted(running *RunningPipeline) {
+	pipelines.watchers.Range(func(_, value interface{}) bool {
 		if watcher, ok := value.(Watcher); ok {
 			go func() {
 				defer func() {
@@ -150,7 +150,7 @@ func (pipelines *RunningPipelines) onRunningPipelineDeleted(running RunningPipel
 						pipelines.Logger.WithField("msg", r).Error("Panic when writing to channel")
 					}
 				}()
-				watcher.Deleted <- running
+				watcher.Deleted <- *running
 			}()
 		}
 		return true
