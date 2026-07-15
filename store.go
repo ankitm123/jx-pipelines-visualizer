@@ -179,7 +179,7 @@ func bleveDocToPipeline(doc *search.DocumentMatch) Pipeline {
 		Commit:          doc.Fields["Commit"].(string),
 		Status:          doc.Fields["Status"].(string),
 		Description:     doc.Fields["Description"].(string),
-		GitURL:          doc.Fields["GitUrl"].(string),
+		GitUrl:          doc.Fields["GitUrl"].(string),
 		Start:           startDate,
 		End:             endDate,
 		Duration:        time.Duration(doc.Fields["Duration"].(float64)),
