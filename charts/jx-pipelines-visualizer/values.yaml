@@ -101,37 +101,29 @@ istio:
   gateway: jx-gateway
 
 gatewayApi:
-  # use Gateway API for networking
   enabled: false
-
   labels: {}
   annotations: {}
-
-  # a (pre-existing) Gateway to attach to
   parentRef:
     name: envoy-gateway
     namespace: envoy-gateway-system
     sectionName: https
-
   # hosts:
   # - pipelines.example.com
   hosts: []
-
-  # list of HTTPRoute spec.rules
-  # if a rule omits backendRefs, default to this Service on service.port
   rules:
   - matches:
     - path:
         type: PathPrefix
         value: /
-
   # Basic auth for the route
   basicAuth:
     enabled: false
-    # Implementation backend
     kind: envoy # supported values: "envoy"
     # base64-encoded htpasswd file content (stored under the .htpasswd secret key)
     authData: ""
+    # existing secret must contain a ".htpasswd" key
+    existingSecret: ""
 
 jx:
   # whether to create a Release CRD when installing charts with Release CRDs included
