@@ -132,6 +132,9 @@ gatewayApi:
     kind: envoy # supported values: "envoy"
     # base64-encoded htpasswd file content (stored under the .htpasswd secret key)
     authData: ""
+    # when set, reference this existing secret (must contain a ".htpasswd" key)
+    # instead of creating one from authData
+    existingSecret: ""
 
 jx:
   # whether to create a Release CRD when installing charts with Release CRDs included
